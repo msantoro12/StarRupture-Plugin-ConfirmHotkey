@@ -26,6 +26,8 @@ Both widgets inherit from the game's generic confirm-action base class `SDK::UCr
 4. Edit the INI if you want a different key.
 
 > **Requires [StarRupture-ModLoader](https://github.com/AlienXAXS/StarRupture-ModLoader)** with plugin interface **v70** (StarRupture **Hotfix 0.3.5**, game build CL 127004 / modloader `v1.22.0`+). The hotfix moved game addresses and the interface floor was raised to 70, so older modloaders will refuse this build. If you are still on game build CL 126119, install [v2.3.0](https://github.com/NasserHabib/StarRupture-Plugin-ConfirmHotkey/releases/tag/v2.3.0) instead; it needs ModLoader v1.21.2 or newer.
+>
+> The plugin declares itself map-migrated (it reads no version-map keys), so it also loads on game build CL 128786 (Steam test branch).
 
 > **Upgrading by hand?** Older ModLoader versions used `Binaries\Win64\Plugins\`. The ModLoader still moves files from that folder into `ModLoader\Plugins\` when the game starts, but it does not replace a file that is already there. Put the new DLL directly in `ModLoader\Plugins\`.
 
