@@ -20,7 +20,9 @@ static PluginInfo s_pluginInfo = {
 	"S4cobra",
 	"Adds a hotkey that confirms the primary action in single-button interior UIs (Recycler, Analyzing Station).",
 	PLUGIN_INTERFACE_VERSION,
-	PLUGIN_TARGET_CLIENT   // v33 — required; loader rejects target mismatches
+	PLUGIN_TARGET_CLIENT,  // v33 — required; loader rejects target mismatches
+	PLUGIN_GAME_BUILT_CL,
+	PLUGIN_MAP_MIGRATED
 };
 
 static bool IsClientBinary()
@@ -41,8 +43,19 @@ extern "C" {
 		return &s_pluginInfo;
 	}
 
+	// Runs before PluginInit and is the only context in which the loader lets a
+	// plugin resolve map fields.
+	void OnPluginLoadHooks(IPluginSelf* self, IPluginHookScanner* scanner)
+	{
+		g_self = self;
+		ModCore::ResolveFields(self, scanner);
+	}
+
 	bool PluginInit(IPluginSelf* self)
 	{
+		// First, before any early return: off its game build the loader refuses
+		// a plugin whose PluginInit did not take the globals.
+		ModCore::InitSdkGlobals(self);
 		g_self = self;
 
 		LOG_INFO("ConfirmHotkey: Plugin initializing...");
