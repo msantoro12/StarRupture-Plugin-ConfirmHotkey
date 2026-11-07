@@ -1,5 +1,6 @@
 LIBRARY ConfirmHotkey
 EXPORTS
     GetPluginInfo
+    OnPluginLoadHooks
     PluginInit
     PluginShutdown

@@ -55,4 +55,19 @@
     </ClCompile>
   </ItemDefinitionGroup>
 
+  <!-- ============================================================
+       PLUGIN_GAME_BUILT_CL
+       The game build (CL) the Game SDK this plugin compiles against was
+       generated from. plugin_interface.h stores it in
+       PluginInfo::gameBuiltCL, and the loader needs it for a plugin that
+       sets PLUGIN_MAP_MIGRATED. Pinned here; a build passes
+       /p:PluginGameBuiltCL=<CL> to override it. PluginGameBuild.props
+       (Plugin SDK) turns it into the define.
+       ============================================================ -->
+  <PropertyGroup>
+    <PluginGameBuiltCL Condition="'$(PluginGameBuiltCL)' == ''">127004</PluginGameBuiltCL>
+  </PropertyGroup>
+  <Import Project="$(PluginSDKInclude)\..\PluginGameBuild.props"
+          Condition="Exists('$(PluginSDKInclude)\..\PluginGameBuild.props')" />
+
 </Project>
