@@ -25,7 +25,9 @@ Both widgets inherit from the game's generic confirm-action base class `SDK::UCr
 3. Launch the game once — `ModLoader\Plugins\config\ConfirmHotkey.ini` is generated with defaults.
 4. Edit the INI if you want a different key.
 
-> **Requires [StarRupture-ModLoader](https://github.com/AlienXAXS/StarRupture-ModLoader)** with plugin interface **v70** (StarRupture **Hotfix 0.3.5**, game build CL 127004 / modloader `v1.22.0`+). The hotfix moved game addresses and the interface floor was raised to 70, so older modloaders will refuse this build. If you are still on game build CL 126119, install [v2.3.0](https://github.com/NasserHabib/StarRupture-Plugin-ConfirmHotkey/releases/tag/v2.3.0) instead; it needs ModLoader v1.21.2 or newer.
+> **Requires [StarRupture-ModLoader](https://github.com/AlienXAXS/StarRupture-ModLoader) v1.23.0 or newer** (plugin interface **v75**). It is built for StarRupture **Hotfix 0.3.5** (game build CL 127004), and it also runs on the other game builds the ModLoader's version map covers (see *Game updates* below). Older ModLoaders will refuse this build: on `v1.22.x`, install the previous release, v2.4.0. If you are still on game build CL 126119, install [v2.3.0](https://github.com/NasserHabib/StarRupture-Plugin-ConfirmHotkey/releases/tag/v2.3.0) instead; it needs ModLoader v1.21.2 or newer.
+
+> **Game updates.** The two game values this plugin reads (`UCrUW_Analyzer::ClaimButton` and `UCrUW_ActionButton::OverlayButton`) come from the ModLoader's version map for the game build that is running, not from numbers built into the DLL. After a StarRupture update that moves them, the plugin keeps working as soon as the ModLoader knows the new build, with no new ConfirmHotkey release. If the ModLoader cannot supply them for a build, the plugin does not act on it, rather than reading the wrong memory.
 
 > **Upgrading by hand?** Older ModLoader versions used `Binaries\Win64\Plugins\`. The ModLoader still moves files from that folder into `ModLoader\Plugins\` when the game starts, but it does not replace a file that is already there. Put the new DLL directly in `ModLoader\Plugins\`.
 
@@ -55,13 +57,13 @@ Modifier tokens (`Ctrl` / `Shift` / `Alt`) are case-insensitive. A bare key (e.g
 
 ## How it works
 
-1. `PluginInit` stores `IPluginSelf*`, inits config, verifies client binary.
+1. `OnPluginLoadHooks` asks the ModLoader for the `ClaimButton` and `OverlayButton` offsets of the running game build. `PluginInit` then takes the SDK globals from the loader, stores `IPluginSelf*`, inits config and verifies the client binary.
 2. `ModCore::Initialize` registers the configured hotkey via `Input->RegisterKeybindByName(..., EModKeyEvent::Pressed, ...)`. The ModLoader (interface v30+) tracks the registration and automatically re-registers the keybind when the user rebinds it in the in-game config UI — no manual config-change subscription needed.
 3. On keypress, the callback walks `UObject::GObjects` in a single pass, filtering to non-CDO objects whose class `IsA SDK::UCrUW_Analyzer`. The first one whose `UWidget::IsVisible()` returns true wins — `ClaimButton->ButtonClicked()` fires for the sound and animation, then `HandleClaimClicked()` fires for the gameplay effect. Both paths are SEH-wrapped so a mid-teardown widget can't take the game down.
 4. The success log captures the widget's actual Blueprint class name (`WBP_Recycler_C`, `WBP_Analyzer_C`, …) so you can tell from the log which building fired.
 5. `PluginShutdown` unregisters the keybind and clears `IPluginSelf`.
 
-No low-level hooks, no pattern scanning — pure typed-hook consumer.
+No low-level hooks, no pattern scanning — pure typed-hook consumer. The only game memory it reads directly is the two members above, at the offsets the ModLoader gives it.
 
 ## Extending to new UIs
 
@@ -89,12 +91,14 @@ msbuild ConfirmHotkey.sln /p:Configuration="Client Release" /p:Platform=x64 ^
 
 Output: `build\Client Release\Plugins\ConfirmHotkey.dll`.
 
+`Shared.props` records the game build the Game SDK was generated for (CL 127004) so the DLL can tell the ModLoader which build it was compiled against. If you build against a Game SDK for another build, pass `/p:PluginGameBuiltCL=<CL>`.
+
 Only `Client Debug` and `Client Release` configurations exist — the plugin is client-only by design (`plugin.cpp` rejects non-client host binaries at init time).
 
 ## Files
 
-- `plugin.{h,cpp}` — the three ABI exports + `IPluginSelf` lifecycle + client-binary guard.
-- `ModCore.{h,cpp}` — hotkey registration, GObjects scan, per-target invocation.
+- `plugin.{h,cpp}` — the ABI exports (including `OnPluginLoadHooks`) + `IPluginSelf` lifecycle + client-binary guard.
+- `ModCore.{h,cpp}` — hotkey registration, map-resolved `ClaimButton`/`OverlayButton` reads, GObjects scan, per-target invocation.
 - `plugin_config.h` — INI schema + typed accessors (`ConfirmHotkeyConfig::Config`).
 - `plugin_helpers.h` — `LOG_*` macros and `GetHooks/GetConfig` wrappers.
 - `dllmain.cpp` — stock Windows DLL entry.
