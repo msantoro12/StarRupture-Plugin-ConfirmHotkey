@@ -146,11 +146,14 @@ jobs:
           $variant  = "Client"
           $varLower = "client"
 
-          # Read interface version range from the checked-out Plugin SDK header.
+          # Read the interface version range from the checked-out Plugin SDK header.
+          # The minimum is the interface version this build reports
+          # (PLUGIN_INTERFACE_VERSION), not the header's MIN: a loader older than
+          # that refuses the DLL, so the auto-updater must not offer it to one.
           $header   = Get-Content "$ws\plugin-sdk\include\plugin_interface.h" -Raw
-          $matchMin = [regex]::Match($header, '#define\s+PLUGIN_INTERFACE_VERSION_MIN\s+(\d+)')
+          $matchMin = [regex]::Match($header, '#define\s+PLUGIN_INTERFACE_VERSION\s+(\d+)')
           $matchMax = [regex]::Match($header, '#define\s+PLUGIN_INTERFACE_VERSION_MAX\s+(\d+)')
-          if (-not $matchMin.Success) { throw "Could not find PLUGIN_INTERFACE_VERSION_MIN in plugin_interface.h" }
+          if (-not $matchMin.Success) { throw "Could not find PLUGIN_INTERFACE_VERSION in plugin_interface.h" }
           if (-not $matchMax.Success) { throw "Could not find PLUGIN_INTERFACE_VERSION_MAX in plugin_interface.h" }
           $ifaceMin = [int]$matchMin.Groups[1].Value
           $ifaceMax = [int]$matchMax.Groups[1].Value
