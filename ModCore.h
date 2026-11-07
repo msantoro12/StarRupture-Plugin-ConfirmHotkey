@@ -5,6 +5,8 @@
 class ModCore
 {
 public:
+    static bool ResolveFields(IPluginSelf* self, IPluginHookScanner* scanner);
+    static void InitSdkGlobals(IPluginSelf* self);
     static bool Initialize(IPluginSelf* self);
     static void Shutdown();
 

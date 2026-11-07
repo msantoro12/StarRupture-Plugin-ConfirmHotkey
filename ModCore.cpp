@@ -11,12 +11,28 @@
 #include "ChimeraUI_classes.hpp"
 #include "UMG_functions.cpp"
 #include "ChimeraUI_functions.cpp"
+#include "plugin_map.h"
 #endif
 
 IPluginSelf* ModCore::s_self        = nullptr;
 char         ModCore::s_keyName[64] = {0};
 
 #if defined(MODLOADER_CLIENT_BUILD)
+
+// The two game members this plugin reads, taken from the loader's map for the
+// running game build and resolved once in OnPluginLoadHooks.
+static auto s_claimButton   = SR_FIELD(decltype(SDK::UCrUW_Analyzer::ClaimButton), UCrUW_Analyzer, ClaimButton, 0);
+static auto s_overlayButton = SR_FIELD(decltype(SDK::UCrUW_ActionButton::OverlayButton), UCrUW_ActionButton, OverlayButton, 0);
+
+bool ModCore::ResolveFields(IPluginSelf* self, IPluginHookScanner* scanner)
+{
+    return PluginMap::ResolveFields(scanner, self, s_claimButton, s_overlayButton);
+}
+
+void ModCore::InitSdkGlobals(IPluginSelf* self)
+{
+    PluginSdkRuntime::Init(self->hooks);
+}
 
 // StarRupture uses UCrUW_Analyzer as a generic "confirm primary action" base
 // for multiple single-button interior UIs. Each building's UI is a Blueprint
@@ -39,8 +55,8 @@ static bool SafeInvokeClaim(SDK::UCrUW_Analyzer* widget)
 {
     __try
     {
-        if (widget->ClaimButton)
-            widget->ClaimButton->ButtonClicked();   // sound + animation
+        if (auto* claimButton = PluginMap::ValueOr(s_claimButton, widget))
+            claimButton->ButtonClicked();           // sound + animation
         widget->HandleClaimClicked();                // gameplay effect (server RPC)
         return true;
     }
@@ -57,9 +73,11 @@ static bool SafeCanClaim(SDK::UCrUW_Analyzer* widget)
 {
     __try
     {
-        if (!widget->ClaimButton) return false;
-        if (!widget->ClaimButton->OverlayButton) return false;
-        return widget->ClaimButton->OverlayButton->GetIsEnabled();
+        auto* claimButton = PluginMap::ValueOr(s_claimButton, widget);
+        if (!claimButton) return false;
+        auto* overlayButton = PluginMap::ValueOr(s_overlayButton, claimButton);
+        if (!overlayButton) return false;
+        return overlayButton->GetIsEnabled();
     }
     __except (EXCEPTION_EXECUTE_HANDLER) { return false; }
 }
