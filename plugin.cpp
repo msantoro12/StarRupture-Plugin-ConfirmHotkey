@@ -47,7 +47,6 @@ extern "C" {
 	// plugin resolve map fields.
 	void OnPluginLoadHooks(IPluginSelf* self, IPluginHookScanner* scanner)
 	{
-		g_self = self;
 		ModCore::ResolveFields(self, scanner);
 	}
 

@@ -19,8 +19,8 @@ char         ModCore::s_keyName[64] = {0};
 
 #if defined(MODLOADER_CLIENT_BUILD)
 
-// The two game members this plugin reads, taken from the loader's map for the
-// running game build and resolved once in OnPluginLoadHooks.
+// The two game members this plugin reads, resolved by the loader for the
+// running game build, once, in OnPluginLoadHooks.
 static auto s_claimButton   = SR_FIELD(decltype(SDK::UCrUW_Analyzer::ClaimButton), UCrUW_Analyzer, ClaimButton, 0);
 static auto s_overlayButton = SR_FIELD(decltype(SDK::UCrUW_ActionButton::OverlayButton), UCrUW_ActionButton, OverlayButton, 0);
 

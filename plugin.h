@@ -8,4 +8,5 @@ extern "C" {
 	PluginInfo* GetPluginInfo();
 	bool PluginInit(IPluginSelf* self);
 	void PluginShutdown();
+	void OnPluginLoadHooks(IPluginSelf* self, IPluginHookScanner* scanner);
 }
